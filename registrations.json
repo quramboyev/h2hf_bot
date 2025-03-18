@@ -1,0 +1,24 @@
+[
+    {
+        "tournamentId": 1,
+        "discipline": "self",
+        "region": "toshkent shahri",
+        "fullName": "Курамбоев Улугбек Мансурбекович",
+        "birthDate": "30.06.2004",
+        "gender": "male",
+        "weightCategory": "64kg",
+        "coachName": "hihaifhoaij akfjalijf odfdadsf",
+        "createdAt": "2025-03-18T21:33:11.255032"
+    },
+    {
+        "tournamentId": 1,
+        "discipline": "combat",
+        "region": "MG JXU",
+        "fullName": "UFI WRriubg",
+        "birthDate": "15.03.2010",
+        "gender": "male",
+        "weightCategory": "88kg",
+        "coachName": "efj wepoibn",
+        "createdAt": "2025-03-18T21:33:19.550079"
+    }
+]
