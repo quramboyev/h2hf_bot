@@ -23,11 +23,17 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Conv
 from typing import Dict, Any
 from telegram.error import BadRequest, Forbidden
 
-from telegram.error import BadRequest, Forbidden
+from docx import Document
+from docx.shared import Pt, Cm
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.table import WD_ALIGN_VERTICAL
+
 # Получаем абсолютный путь к текущей директории
 current_dir = os.path.dirname(os.path.abspath(__file__))
 # Добавляем родительскую директорию в sys.path
 sys.path.append(current_dir)
+
+admins = [5012886318, 384221607, 491264374]
 
 try:
     from bot5 import create_registration_doc
@@ -46,11 +52,12 @@ logger = logging.getLogger(__name__)
 
 # Загрузка переменных окружения
 load_dotenv()
-TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+TOKEN = os.getenv('6689906797:AAEKnJ1WtL7oiZGFnNd50tpHTsstXtcOvzM')
 if not TOKEN:
     raise ValueError("No token provided! Add TELEGRAM_BOT_TOKEN to .env file.")
 
 logger.info(f"Bot token loaded successfully")
+
 
 # Функция для генерации документа со всеми регистрациями
 async def generate_registrations_doc(tournament, registrations_list, lang):
@@ -64,6 +71,7 @@ async def generate_registrations_doc(tournament, registrations_list, lang):
     except Exception as e:
         logger.error(f"Error generating Word document: {e}")
         return None
+
 
 # Добавляем новое состояние
 SUBSCRIPTION = 12
@@ -211,8 +219,10 @@ regions = [
 
 # Весовые категории для мальчиков и девочек
 weight_categories = {
-    'male': ["21kg", "24kg", "27kg", "30kg", "33kg", "35kg", "38kg", "41kg", "44kg", "48kg", "52kg", "+52kg", "53kg", "57kg", "58kg", "62kg", "64kg", "67kg", "+67kg", "+70kg", "73kg", "80kg", "88kg", "97kg", "+97kg",],
-    'female': ["21kg", "24kg", "27kg", "30kg", "33kg", "35kg", "38kg", "+38kg", "48kg", "53kg", "58kg", "64kg", "70kg", "+70kg",]
+    'male': ["21kg", "24kg", "27kg", "30kg", "33kg", "35kg", "38kg", "41kg", "44kg", "48kg", "52kg", "+52kg", "53kg",
+             "57kg", "58kg", "62kg", "64kg", "67kg", "+67kg", "+70kg", "73kg", "80kg", "88kg", "97kg", "+97kg", ],
+    'female': ["21kg", "24kg", "27kg", "30kg", "33kg", "35kg", "38kg", "+38kg", "48kg", "53kg", "58kg", "64kg", "70kg",
+               "+70kg", ]
 }
 
 # Турниры
@@ -242,6 +252,7 @@ tournaments = [
 # Список регистраций
 registrations = []
 
+
 # Функция для загрузки регистраций из файла
 def load_registrations():
     global registrations
@@ -249,22 +260,27 @@ def load_registrations():
         with open("registrations.json", "r", encoding="utf-8") as file:
             registrations = json.load(file)
 
+
 # Функция для сохранения регистраций в файл
 def save_registrations():
     with open("registrations.json", "w", encoding="utf-8") as file:
         json.dump(registrations, file, ensure_ascii=False, indent=4)
 
+
 # Загружаем регистрации при старте
 load_registrations()
+
 
 def get_text(key: str, lang: str) -> str:
     """Получить перевод текста"""
     return translations.get(lang, {}).get(key, "Текст не найден")
 
+
 def get_region_name(region_id: str, lang: str) -> str:
     """Получить название региона"""
     region = next((r for r in regions if r['id'] == region_id), None)
     return region[f'name{lang.capitalize()}'] if region else region_id
+
 
 def is_registration_open(tournament_date: str) -> bool:
     """Проверка, открыта ли регистрация на турнир"""
@@ -274,6 +290,7 @@ def is_registration_open(tournament_date: str) -> bool:
     except Exception as e:
         logger.error(f"Error checking registration date: {e}")
         return False
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Начало разговора и выбор языка"""
@@ -295,7 +312,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         logger.error(f"Error in start: {e}")
         await update.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
-    
+
 
 async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обработка выбора языка"""
@@ -308,7 +325,8 @@ async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
         # Показываем сообщение с просьбой подписаться на канал
         keyboard = [
-            [InlineKeyboardButton(get_text('subscribe_button', lang), url='https://t.me/fedrpo')],  # Замените на ваш канал
+            [InlineKeyboardButton(get_text('subscribe_button', lang), url='https://t.me/fedrpo')],
+            # Замените на ваш канал
             [InlineKeyboardButton(get_text('subscribe_confirm_button', lang), callback_data='subscribed')]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -322,9 +340,6 @@ async def language_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         await update.callback_query.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
 
-from telegram.error import BadRequest, Forbidden
-
-from telegram.error import BadRequest, Forbidden
 
 async def handle_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обработка подтверждения подписки"""
@@ -352,7 +367,6 @@ async def handle_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE
         logger.error(f"Error in handle_subscription: {e}")
         await update.callback_query.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
-
 
 
 async def show_tournament_details(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -431,6 +445,7 @@ async def show_tournament_details(update: Update, context: ContextTypes.DEFAULT_
         await update.callback_query.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
 
+
 async def start_registration(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Начало процесса регистрации"""
     try:
@@ -456,6 +471,7 @@ async def start_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
         logger.error(f"Error in start_registration: {e}")
         await update.callback_query.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
+
 
 async def discipline_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обработка выбора дисциплины"""
@@ -500,6 +516,7 @@ async def discipline_selected(update: Update, context: ContextTypes.DEFAULT_TYPE
         await update.callback_query.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
 
+
 async def region_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обработка выбора региона"""
     try:
@@ -517,6 +534,7 @@ async def region_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await update.callback_query.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
 
+
 async def process_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обработка ввода имени"""
     try:
@@ -532,8 +550,8 @@ async def process_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         discipline = context.user_data['discipline']
         for reg in registrations:
             if (reg['tournamentId'] == tournament_id and
-                reg['discipline'] == discipline and
-                reg['fullName'].lower() == name.lower()):
+                    reg['discipline'] == discipline and
+                    reg['fullName'].lower() == name.lower()):
                 lang = context.user_data['language']
                 await update.message.reply_text(
                     get_text('name_already_registered', lang).format(name=name))
@@ -548,6 +566,7 @@ async def process_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         logger.error(f"Error in process_name: {e}")
         await update.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
+
 
 async def process_birth_date(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обработка ввода даты рождения"""
@@ -601,6 +620,7 @@ async def process_birth_date(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
 
+
 async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обработка выбора пола"""
     try:
@@ -636,6 +656,7 @@ async def gender_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await update.callback_query.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
 
+
 async def weight_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обработка выбора весовой категории"""
     try:
@@ -652,6 +673,7 @@ async def weight_selected(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         logger.error(f"Error in weight_selected: {e}")
         await update.callback_query.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
+
 
 async def process_coach(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обработка ввода имени тренера"""
@@ -692,9 +714,9 @@ async def process_coach(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         keyboard = [
             [
                 InlineKeyboardButton(get_text('confirm_correct', lang),
-                                callback_data='confirm_correct'),
+                                     callback_data='confirm_correct'),
                 InlineKeyboardButton(get_text('restart', lang),
-                                callback_data='restart')
+                                     callback_data='restart')
             ]
         ]
 
@@ -709,6 +731,7 @@ async def process_coach(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         logger.error(f"Error in process_coach: {e}")
         await update.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
+
 
 async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обработка подтверждения данных"""
@@ -728,9 +751,9 @@ async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE
             keyboard = [
                 [
                     InlineKeyboardButton(get_text('yes', lang),
-                                    callback_data='final_confirm_yes'),
+                                         callback_data='final_confirm_yes'),
                     InlineKeyboardButton(get_text('no', lang),
-                                    callback_data='final_confirm_no')
+                                         callback_data='final_confirm_no')
                 ]
             ]
 
@@ -744,6 +767,7 @@ async def handle_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE
         logger.error(f"Error in handle_confirmation: {e}")
         await update.callback_query.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
+
 
 async def handle_final_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обработка финального подтверждения"""
@@ -788,6 +812,7 @@ async def handle_final_confirmation(update: Update, context: ContextTypes.DEFAUL
         await update.callback_query.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
 
+
 async def back_to_tournaments(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Возврат к списку турниров"""
     try:
@@ -814,6 +839,7 @@ async def back_to_tournaments(update: Update, context: ContextTypes.DEFAULT_TYPE
         logger.error(f"Error in back_to_tournaments: {e}")
         await update.callback_query.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
+
 
 async def back_to_tournament(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Возврат к деталям турнира"""
@@ -855,6 +881,7 @@ async def back_to_tournament(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.callback_query.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
 
+
 async def back_to_discipline(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Возврат к выбору дисциплины"""
     try:
@@ -882,6 +909,166 @@ async def back_to_discipline(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.callback_query.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
 
+
+async def clear_command(update:Update, context: ContextTypes.DEFAULT_TYPE):
+    # Проверяем, является ли пользователь администратором
+    if update.effective_user.id not in admins:
+        await update.message.reply_text("У вас нет прав для выполнения этой команды.")
+        return
+    os.remove('registrations.json')
+    await update.message.reply_text('registration.json was cleared')
+
+
+
+async def download_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Создание и отправка документа со списком регистраций"""
+    try:
+        # Проверяем, является ли пользователь администратором
+        if update.effective_user.id not in admins:
+            await update.message.reply_text("У вас нет прав для выполнения этой команды.")
+            return
+
+        # Загружаем регистрации из файла
+        if not os.path.exists("registrations.json"):
+            await update.message.reply_text("Нет данных о регистрациях.")
+            return
+
+        with open("registrations.json", "r", encoding="utf-8") as file:
+            registrations_data = json.load(file)
+
+        # Находим соответствующий турнир
+        tournament_data = next((t for t in tournaments if t['id'] == 1), None)
+        if not tournament_data:
+            await update.message.reply_text("Турнир не найден.")
+            return
+
+        # Генерируем документ
+        filename = create_doc(tournament_data, registrations_data, 'ru')
+        
+        if not filename:
+            await update.message.reply_text("Ошибка при создании документа.")
+            return
+
+        # Отправляем документ
+        with open(filename, 'rb') as doc:
+            await update.message.reply_document(
+                document=doc,
+                filename=f"Регистрации_{datetime.now().strftime('%Y%m%d_%H%M')}.docx"
+            )
+        
+        # Удаляем временный файл
+        os.remove(filename)
+
+    except Exception as e:
+        logger.error(f"Error in download_command: {e}")
+        await update.message.reply_text("Произошла ошибка при создании документа.")
+
+
+def create_doc(registrations, tournament_data, language='ru'):
+    """
+    Создает Word документ с регистрациями
+    Args:
+        registrations: список регистраций
+        tournament_data: данные турнира
+        language: язык документа ('ru' или 'uz')
+    Returns:
+        str: путь к созданному файлу
+    """
+    try:
+        doc = Document()
+
+        # Настройка полей страницы
+        sections = doc.sections
+        for section in sections:
+            section.top_margin = Cm(2)
+            section.bottom_margin = Cm(2)
+            section.left_margin = Cm(2)
+            section.right_margin = Cm(2)
+
+        # Заголовок документа
+        title = doc.add_paragraph()
+        title_run = title.add_run(f"Список участников - {tournament_data[f'name{language.capitalize()}']}")
+        title_run.font.size = Pt(14)
+        title_run.font.bold = True
+        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        # Добавляем информацию о турнире
+        info = doc.add_paragraph()
+        info.add_run(f"Дата турнира: {tournament_data['date']}\n")
+        info.add_run(f"Организатор: {tournament_data[f'organizer{language.capitalize()}']}")
+        info.alignment = WD_ALIGN_PARAGRAPH.LEFT
+
+        # Создаем таблицы для каждой дисциплины
+        disciplines = {
+            'self_defense': 'Самооборона',
+            'combat': 'Поединок'
+        }
+
+        for disc_key, disc_name in disciplines.items():
+            # Фильтруем регистрации по дисциплине
+            disc_registrations = [r for r in registrations if r['discipline'] == disc_key]
+
+            if disc_registrations:
+                # Добавляем заголовок дисциплины
+                doc.add_paragraph().add_run(f"\n{disc_name}").bold = True
+
+                # Создаем таблицу
+                table = doc.add_table(rows=1, cols=7)
+                table.style = 'Table Grid'
+
+                # Заголовки таблицы
+                headers = ['№', 'ФИО', 'Дата рождения', 'Регион', 'Пол', 'Вес', 'Тренер']
+                header_cells = table.rows[0].cells
+                for i, header in enumerate(headers):
+                    header_cells[i].text = header
+                    header_cells[i].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    header_cells[i].vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+
+                # Заполняем таблицу данными
+                for idx, reg in enumerate(disc_registrations, 1):
+                    row_cells = table.add_row().cells
+
+                    # Номер
+                    row_cells[0].text = str(idx)
+                    row_cells[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+                    # ФИО
+                    row_cells[1].text = reg['fullName']
+
+                    # Дата рождения
+                    row_cells[2].text = reg['birthDate']
+                    row_cells[2].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+                    # Регион
+                    region = next((r for r in regions if r['id'] == reg['region']), None)
+                    row_cells[3].text = region[f'name{language.capitalize()}'] if region else reg['region']
+
+                    # Пол
+                    row_cells[4].text = 'Мужской' if reg['gender'] == 'male' else 'Женский'
+                    row_cells[4].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+                    # Вес
+                    row_cells[5].text = reg['weightCategory']
+                    row_cells[5].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+                    # Тренер
+                    row_cells[6].text = reg['coachName']
+
+                # Устанавливаем ширину столбцов
+                widths = [1, 4, 2, 3, 1.5, 1.5, 4]
+                for i, width in enumerate(widths):
+                    for cell in table.columns[i].cells:
+                        cell.width = Cm(width)
+
+        # Сохраняем документ
+        filename = f"registrations_{datetime.now().strftime('%Y%m%d_%H%M')}.docx"
+        doc.save(filename)
+        return filename
+
+    except Exception as e:
+        return None
+
+
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Отмена регистрации"""
     try:
@@ -893,6 +1080,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         logger.error(f"Error in cancel: {e}")
         await update.message.reply_text(get_text('error_message', 'ru'))
         return ConversationHandler.END
+
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Обработчик ошибок"""
@@ -908,6 +1096,8 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             )
     except Exception as e:
         logger.error(f"Error in error handler: {e}")
+
+
 def main():
     """Запуск бота"""
     try:
@@ -916,9 +1106,9 @@ def main():
             os.remove("bot_data")
 
         # Инициализируем приложение
-        application = Application.builder()\
-            .token(TOKEN)\
-            .persistence(PicklePersistence(filepath="bot_data"))\
+        application = Application.builder() \
+            .token(TOKEN) \
+            .persistence(PicklePersistence(filepath="bot_data")) \
             .build()
 
         # Создаем обработчик разговора
@@ -978,12 +1168,15 @@ def main():
         # Добавляем обработчики
         application.add_handler(conv_handler)
         application.add_error_handler(error_handler)
+        application.add_handler(CommandHandler('download', download_command))
+        application.add_handler(CommandHandler('clear', clear_command))
 
         # Запускаем бота
         logger.info("Starting bot...")
         application.run_polling(allowed_updates=Update.ALL_TYPES)
     except Exception as e:
         logger.error(f"Error in main: {e}")
+
 
 if __name__ == '__main__':
     main()

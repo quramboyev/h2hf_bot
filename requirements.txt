@@ -1,7 +1,6 @@
 alabaster==1.0.0
 argcomplete==3.5.3
 asttokens==3.0.0
-attrs==23.2.1.dev0
 autocommand==2.2.2
 Babel==2.15.0
 Brlapi==0.8.6
